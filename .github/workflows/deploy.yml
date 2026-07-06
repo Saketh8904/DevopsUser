@@ -3,7 +3,7 @@ name: Deploy to EC2
 on:
   push:
     branches:
-      - main
+      - master
 
 jobs:
   deploy:
@@ -12,14 +12,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Deploy
+      - name: Deploy to EC2
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
           script: |
             cd ~/DevopsUser
             git pull origin master
             npm install
-            pm2 restart all
+            pm2 restart app || pm2 start app.js --name app
