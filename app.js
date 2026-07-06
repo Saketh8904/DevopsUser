@@ -1,9 +1,13 @@
-const express=require('express')
+const express = require("express");
 
-const app=express()
+const app = express();
 
-app.get('/',(req,res)=>{
+const PORT = process.env.PORT || 3000;
 
-res.send("DevOps Assignment Running")
+app.get("/", (req, res) => {
+    res.send("DevOps Assignment Running");
+});
 
-})
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});

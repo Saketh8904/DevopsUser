@@ -1,0 +1,14 @@
+{
+  "name": "devopsuser",
+  "version": "1.0.0",
+  "description": "AWS DevOps Assignment",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "author": "Saketh Alevooraya K",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.21.2"
+  }
+}
