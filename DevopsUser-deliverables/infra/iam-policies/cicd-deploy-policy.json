@@ -1,0 +1,40 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DescribeInstancesOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:DescribeInstances",
+        "ec2:DescribeInstanceStatus"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "SSMDeployOnly",
+      "Effect": "Allow",
+      "Action": [
+        "ssm:SendCommand",
+        "ssm:GetCommandInvocation",
+        "ssm:ListCommandInvocations"
+      ],
+      "Resource": [
+        "arn:aws:ec2:ap-south-1:YOUR_ACCOUNT_ID:instance/YOUR_INSTANCE_ID",
+        "arn:aws:ssm:ap-south-1::document/AWS-RunShellScript"
+      ]
+    },
+    {
+      "Sid": "DeployBucketOnly",
+      "Effect": "Allow",
+      "Action": [
+        "s3:PutObject",
+        "s3:GetObject",
+        "s3:ListBucket"
+      ],
+      "Resource": [
+        "arn:aws:s3:::backup0123",
+        "arn:aws:s3:::backup0123/*"
+      ]
+    }
+  ]
+}

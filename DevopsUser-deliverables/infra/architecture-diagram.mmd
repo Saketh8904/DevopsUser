@@ -1,0 +1,50 @@
+flowchart TB
+
+    User["Client / Browser"]
+
+    subgraph AWS["AWS Free Tier (ap-south-1)"]
+
+        EC2["EC2 Ubuntu 26.04<br/>t2.micro"]
+
+        NGINX["Nginx<br/>Reverse Proxy"]
+
+        APP["Node.js + Express Application<br/>Managed by PM2"]
+
+        S3["Amazon S3<br/>Backup Storage"]
+
+        CWA["CloudWatch Agent"]
+
+        CW["Amazon CloudWatch<br/>Metrics, Logs,<br/>Dashboards & Alarms"]
+
+        SNS["Amazon SNS<br/>Email Alerts"]
+
+        IAMROLE["IAM Role<br/>CloudWatchEC2Role"]
+
+    end
+
+    subgraph CICD["CI/CD Pipeline"]
+
+        GH["GitHub Repository"]
+
+        GHA["GitHub Actions"]
+
+    end
+
+    Admin["Developer / Admin"]
+
+    User -->|HTTP/HTTPS| NGINX
+    NGINX -->|Reverse Proxy| APP
+
+    APP -->|Application Backups| S3
+
+    APP -->|Application Logs| CWA
+    EC2 -->|System Metrics| CWA
+    CWA -->|Logs & Metrics| CW
+
+    CW -->|CloudWatch Alarms| SNS
+    SNS -->|Email Notification| Admin
+
+    GH --> GHA
+    GHA -->|SSH Deploy| EC2
+
+    IAMROLE -.Attached Role.-> EC2
