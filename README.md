@@ -2,160 +2,314 @@
 
 [![CI/CD](https://github.com/Saketh8904/DevopsUser/actions/workflows/deploy.yml/badge.svg)](https://github.com/Saketh8904/DevopsUser/actions)
 
-A end-to-end DevOps project demonstrating how to design, deploy, secure, monitor, and
-load-test a web application on AWS Free Tier, with a fully automated CI/CD pipeline.
+An end-to-end DevOps project demonstrating how to design, deploy, secure, monitor, and load-test a web application on AWS Free Tier, with a fully automated CI/CD pipeline.
 
-> **Author:** Saketh
+> **Author:** Saketh Alevooraya K
+>
 > **Repo:** https://github.com/Saketh8904/DevopsUser
-> **Status:** `<<FILL IN: e.g. Completed / In Progress>>`
+>
+> **Status:** ✅ Completed
 
 ---
 
 ## 1. Project Summary
 
 | Item | Details |
-|---|---|
-| Application | `<<FILL IN: e.g. Node.js/Express REST API — "Task Manager API">>` |
-| Compute | Amazon EC2 (t2.micro, Free Tier) |
-| Storage | Amazon S3 (static assets / backups) |
-| API Layer | Amazon API Gateway → EC2 (or Lambda, if used) |
-| IAM | Least-privilege roles for EC2, CI/CD, S3 access |
-| Security | Security Groups, HTTPS via Let's Encrypt / ACM, restricted SSH |
-| CI/CD | GitHub Actions (build → test → deploy to EC2) |
-| Monitoring | Amazon CloudWatch (metrics, logs, dashboards, alarms) |
-| Load Testing | k6 / JMeter — see `load-testing/` |
-| Region | `<<FILL IN: e.g. ap-south-1>>` |
+|------|---------|
+| Application | Node.js Express Web Application |
+| Compute | Amazon EC2 (Ubuntu t2.micro - Free Tier) |
+| Storage | Amazon S3 (Application Backup) |
+| Backup | Automated Backup Script (`backup.sh`) |
+| IAM | Least-Privilege IAM User & EC2 IAM Role |
+| Security | Security Groups, SSH Key Authentication |
+| CI/CD | GitHub Actions (Build → Deploy to EC2) |
+| Monitoring | Amazon CloudWatch (Metrics & Logs) |
+| Load Testing | k6 / Apache JMeter |
+| Region | ap-south-1 (Mumbai) |
 
 ---
 
 ## 2. Repository Structure
 
-```
+```text
 DevopsUser/
-├── app/                        # Application source code
-│   ├── src/
-│   ├── package.json
-│   └── Dockerfile              # (if containerized)
-├── infra/
-│   ├── architecture-diagram.png
-│   ├── security-groups.md
-│   └── iam-policies/
-│       ├── ec2-role-policy.json
-│       └── cicd-deploy-policy.json
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml          # CI/CD pipeline
-├── load-testing/
-│   ├── load-test.js            # k6 script (or .jmx for JMeter)
-│   └── LOAD_TEST_REPORT.md
-├── monitoring/
-│   ├── cloudwatch-dashboard.json
-│   └── screenshots/
-├── docs/
-│   ├── DEPLOYMENT_GUIDE.md
-│   ├── SECURITY_SUMMARY.md
-│   └── FINAL_REPORT.md
-└── README.md                   # this file
+│       └── deploy.yml          # GitHub Actions CI/CD Pipeline
+├── node_modules/               # Node.js Dependencies
+├── README.md                   # Project Documentation
+├── app.js                      # Main Express Application
+├── backup.sh                   # S3 Backup Script
+├── package.json
+└── package-lock.json
 ```
-
-> Adjust this tree to match what you actually committed — the point is that every
-> deliverable below has a **findable home** in the repo instead of living only in chat/screenshots.
 
 ---
 
 ## 3. Architecture
 
-![Architecture Diagram](infra/architecture-diagram.png)
-
-**Flow:**
 ```
-Client → HTTPS (443) → API Gateway ─┐
-                                     ├─→ EC2 (Nginx reverse proxy + App on port 3000/8080)
-Client → HTTPS (443) → Route53/EIP ─┘        │
-                                              ├─→ CloudWatch Agent → Logs / Metrics
-                                              └─→ S3 (static assets, DB backups)
-
-GitHub Actions (CI/CD) → SSH/SSM deploy → EC2
-IAM Roles: EC2-Instance-Role (S3 read/write scoped to one bucket, CloudWatch:PutMetricData)
-           CICD-Deploy-Role (least privilege: ec2:Describe*, ssm:SendCommand, s3:PutObject)
+                          +--------------------+
+                          |      GitHub        |
+                          |    Source Code     |
+                          +---------+----------+
+                                    |
+                                    | Push
+                                    |
+                         GitHub Actions CI/CD
+                                    |
+                                    |
+                                    v
+                      +------------------------------+
+                      |        Amazon EC2            |
+                      | Ubuntu Server (t2.micro)     |
+                      |------------------------------|
+                      | Node.js Express Application  |
+                      | app.js                       |
+                      +--------------+---------------+
+                                     |
+                  +------------------+------------------+
+                  |                                     |
+                  |                                     |
+                  v                                     v
+          Amazon CloudWatch                     backup.sh Script
+        Metrics, Logs & Alarms                         |
+                                                       |
+                                                       v
+                                                Amazon S3 Bucket
+                                              Application Backups
 ```
 
-A full-resolution diagram is at `infra/architecture-diagram.png` (see Section 9 for how to regenerate it).
+### Application Flow
+
+```
+User
+   │
+   ▼
+EC2 Public IP / Elastic IP
+   │
+   ▼
+Node.js Express Application
+   │
+   ├── CloudWatch Agent
+   │       │
+   │       ▼
+   │   CloudWatch Logs & Metrics
+   │
+   └── backup.sh
+           │
+           ▼
+      Amazon S3 Bucket
+```
 
 ---
 
-## 4. Quick Start (Local Dev)
+## 4. Quick Start (Local Development)
+
+Clone the repository
 
 ```bash
 git clone https://github.com/Saketh8904/DevopsUser.git
-cd DevopsUser/app
-npm install          # or: pip install -r requirements.txt
-npm run dev          # runs locally on http://localhost:3000
 ```
 
-For full AWS deployment steps, see **[docs/DEPLOYMENT_GUIDE.md](docs/DEPLOYMENT_GUIDE.md)**.
+Move into the project directory
+
+```bash
+cd DevopsUser
+```
+
+Install dependencies
+
+```bash
+npm install
+```
+
+Run the application
+
+```bash
+node app.js
+```
+
+Application URL
+
+```
+http://localhost:3000
+```
 
 ---
 
 ## 5. Deliverables Index
 
 | Deliverable | Location |
-|---|---|
-| Git repository | this repo |
-| Deployment guide | `docs/DEPLOYMENT_GUIDE.md` |
-| Architecture diagram | `infra/architecture-diagram.png` |
-| Pipeline configuration | `.github/workflows/deploy.yml` |
-| Monitoring screenshots | `monitoring/screenshots/` |
-| Load testing report | `load-testing/LOAD_TEST_REPORT.md` |
-| Security summary | `docs/SECURITY_SUMMARY.md` |
-| Demo video | `<<FILL IN: link once recorded — see Section 8>>` |
-| Final report (PDF/DOCX) | `docs/FINAL_REPORT.md` (export to PDF/DOCX before submission) |
+|--------------|----------|
+| Git Repository | This Repository |
+| Deployment Guide | README.md |
+| Architecture Diagram | Section 3 |
+| Pipeline Configuration | `.github/workflows/deploy.yml` |
+| Monitoring | Amazon CloudWatch |
+| Backup Script | `backup.sh` |
+| CI/CD Pipeline | GitHub Actions |
+| Final Report | README.md |
 
 ---
 
 ## 6. CI/CD Pipeline
 
-Trigger: push to `main`.
-Stages: **Lint → Test → Build → Deploy to EC2 (via SSH/SSM) → Smoke test**.
-See `.github/workflows/deploy.yml`. Secrets used: `EC2_HOST`, `EC2_SSH_KEY`, `AWS_ACCESS_KEY_ID`,
-`AWS_SECRET_ACCESS_KEY` (stored in GitHub Actions encrypted secrets, scoped to a
-least-privilege IAM user — never the root account).
+The deployment pipeline is implemented using **GitHub Actions**.
+
+### Trigger
+
+- Push to `main`
+
+### Pipeline Stages
+
+- Checkout Repository
+- Install Node.js
+- Install Dependencies
+- Build Application
+- Deploy to EC2
+- Restart Application
+- Verify Deployment
+
+Workflow File
+
+```
+.github/workflows/deploy.yml
+```
+
+Secrets Used
+
+- EC2_HOST
+- EC2_USERNAME
+- EC2_SSH_KEY
+- AWS_ACCESS_KEY_ID
+- AWS_SECRET_ACCESS_KEY
+
+All secrets are securely stored using GitHub Actions Secrets.
 
 ---
 
 ## 7. Monitoring
 
-- **CloudWatch Agent** installed on EC2, streaming `cpu`, `mem`, `disk`, and app logs
-  (`/var/log/app/*.log`) to CloudWatch Logs.
-- **Dashboard**: CPUUtilization, NetworkIn/Out, StatusCheckFailed, custom app metrics
-  (requests/sec, error rate).
-- **Alarms**:
-  - CPUUtilization > 80% for 5 min → SNS email
-  - StatusCheckFailed ≥ 1 → SNS email
-  - 5xx error rate > 5% over 5 min → SNS email
-- Screenshots in `monitoring/screenshots/`.
+Monitoring is implemented using **Amazon CloudWatch**.
+
+Metrics monitored include
+
+- CPU Utilization
+- Memory Usage
+- Disk Usage
+- Network Traffic
+- Status Checks
+- Application Logs
+
+CloudWatch Features
+
+- Log Groups
+- Metrics
+- Dashboards
+- Alarms
+- EC2 Monitoring
 
 ---
 
-## 8. Demo Video
+## 8. Backup
 
-`<<FILL IN once recorded>>` — 5–10 min walkthrough covering: architecture, live deploy via
-GitHub Actions, hitting the HTTPS endpoint, CloudWatch dashboard, and a short load test run.
-(See the "Recording the demo video" section in `docs/DEPLOYMENT_GUIDE.md` for a suggested script.)
+The project includes an automated backup solution using Amazon S3.
 
----
+Backup Script
 
-## 9. Regenerating the Architecture Diagram
-
-A Mermaid source file is provided so the diagram can be edited and re-exported:
-`infra/architecture-diagram.mmd`. Render with:
-
-```bash
-npx @mermaid-js/mermaid-cli -i infra/architecture-diagram.mmd -o infra/architecture-diagram.png
+```
+backup.sh
 ```
 
+The script performs
+
+- Compress Application
+- Generate Timestamp
+- Upload Archive to Amazon S3
+- Verify Upload
+
 ---
 
-## 10. License
+## 9. Security
 
-`<<FILL IN, e.g. MIT>>`
+Security best practices implemented
+
+- IAM Least Privilege
+- GitHub Secrets
+- SSH Key Authentication
+- Restricted Security Groups
+- No Hardcoded Credentials
+- AWS Free Tier Best Practices
+
+---
+
+## 10. Technologies Used
+
+- AWS EC2
+- Amazon S3
+- Amazon CloudWatch
+- IAM
+- GitHub Actions
+- Ubuntu Linux
+- Node.js
+- Express.js
+- Bash
+- Git
+- GitHub
+
+---
+
+## 11. Project Features
+
+- Automated CI/CD Pipeline
+- Secure EC2 Deployment
+- CloudWatch Monitoring
+- Amazon S3 Backup
+- GitHub Actions Automation
+- AWS Free Tier Deployment
+- Infrastructure Security
+
+---
+
+## 12. Future Improvements
+
+- Docker Containerization
+- Nginx Reverse Proxy
+- HTTPS using Let's Encrypt
+- Terraform Infrastructure as Code
+- Auto Scaling
+- Load Balancer
+- Prometheus Monitoring
+- Grafana Dashboard
+
+---
+
+## 13. Demo
+
+A complete demonstration includes
+
+- Application Deployment
+- GitHub Actions Pipeline
+- EC2 Instance
+- CloudWatch Dashboard
+- Amazon S3 Backup
+- Live Application Access
+
+---
+
+## 14. License
+
+This project was developed for educational purposes as part of a DevOps on AWS Free Tier assignment.
+
+---
+
+## Author
+
+**Saketh Alevooraya K**
+
+GitHub: https://github.com/Saketh8904
+
+Project Repository:
+
+https://github.com/Saketh8904/DevopsUser
